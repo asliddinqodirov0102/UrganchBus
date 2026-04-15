@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Urganch Bus — Jamoat Transporti Boshqaruv Tizimi</title>
+  <meta name="description" content="Urganch shahri jamoat transporti uchun real-vaqt avtobus yo'nalishlari, bekatlar va jadvallar tizimi." />
+  <meta name="keywords" content="Urganch, avtobus, transport, jadval, yo'nalish, xarita" />
+  <meta name="author" content="Urganch Shahar Hokimligi" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Urganch Bus — Jamoat Transporti" />
+  <meta property="og:description" content="Real-vaqt avtobus jadval va yo'nalish tizimi" />
+  <meta property="og:type" content="website" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>" />
+
+  <!-- Leaflet.js -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LOADING OVERLAY
+       ═══════════════════════════════════════════════════════════ -->
+  <div id="loadingOverlay" aria-label="Yuklanmoqda" role="status">
+    <div class="loader-logo">🚌</div>
+    <div class="loader-text">Urganch Bus yuklanmoqda...</div>
+    <div class="loader-bar">
+      <div class="loader-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       NAVBAR
+       ═══════════════════════════════════════════════════════════ -->
+  <nav class="navbar" role="navigation" aria-label="Asosiy navigatsiya">
+
+    <!-- Mobile menu button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Menyu" aria-expanded="false">
+      ☰
+    </button>
+
+    <!-- Brand/Logo -->
+    <a class="navbar-brand" href="#" aria-label="Urganch Bus bosh sahifa">
+      <div class="brand-icon" aria-hidden="true">🚌</div>
+      <div>
+        <div class="brand-text">Urganch Bus</div>
+        <span class="brand-sub">JAMOAT TRANSPORTI</span>
+      </div>
+    </a>
+
+    <!-- Search -->
+    <div class="search-wrap" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        type="search"
+        id="routeSearch"
+        placeholder="Yo'nalish raqami yoki nomi..."
+        autocomplete="off"
+        aria-label="Yo'nalish qidirish"
+      />
+    </div>
+
+    <!-- Live status -->
+    <div class="status-pill" role="status" aria-live="polite">
+      <div class="status-dot" aria-hidden="true"></div>
+      Jonli
+    </div>
+
+    <!-- Spacer -->
+    <div style="flex:1;"></div>
+
+    <!-- Dark mode toggle -->
+    <button class="theme-btn" id="themeBtn" aria-label="Mavzuni o'zgartirish" title="Tungi/Kunduzgi rejim">
+      🌙
+    </button>
+
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ASOSIY LAYOUT
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="app-layout">
+
+    <!-- ─────────────────────────────────────────────────────────
+         SIDEBAR — Yo'nalishlar / Jadval
+         ───────────────────────────────────────────────────────── -->
+    <aside class="sidebar" id="sidebar" aria-label="Yo'nalishlar panel">
+
+      <div class="sidebar-header">
+        <div class="sidebar-title">Yo'nalishlar va Jadval</div>
+
+        <!-- Tablar -->
+        <div class="tab-group" role="tablist" aria-label="Panel turlari">
+          <button
+            class="tab-btn active"
+            id="routesTabBtn"
+            role="tab"
+            aria-selected="true"
+            aria-controls="routesPanel"
+          >
+            🗺 Yo'nalishlar
+          </button>
+          <button
+            class="tab-btn"
+            id="scheduleTabBtn"
+            role="tab"
+            aria-selected="false"
+            aria-controls="schedulePanel"
+          >
+            🕐 Jadval
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-scroll">
+        <!-- Yo'nalishlar tab -->
+        <div id="routesPanel" role="tabpanel" aria-labelledby="routesTabBtn">
+          <div id="routesList" aria-label="Yo'nalishlar ro'yxati">
+            <!-- JS tomonidan to'ydiriladi -->
+            <div style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+              <div style="font-size:2rem;margin-bottom:8px;">⏳</div>
+              <div style="font-size:0.85rem;">Yuklanmoqda...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jadval tab -->
+        <div id="schedulePanel" role="tabpanel" aria-labelledby="scheduleTabBtn" style="display:none;">
+          <!-- JS tomonidan to'ydiriladi -->
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ─────────────────────────────────────────────────────────
+         XARITA
+         ───────────────────────────────────────────────────────── -->
+    <main class="map-wrap" aria-label="Interaktiv xarita">
+
+      <!-- Leaflet xarita konteyneri -->
+      <div id="map" role="application" aria-label="Urganch avtobus xaritasi"></div>
+
+      <!-- O'ng tomon — Bus status kartochkalar -->
+      <div class="bus-popup-list" id="busPopupList" aria-label="Avtobus holati" aria-live="polite">
+        <!-- JS to'ldiradi -->
+      </div>
+
+      <!-- Pastki statistika -->
+      <div class="map-info-panel" aria-label="Statistika">
+        <div class="info-card">
+          <div class="info-card-label">Yo'nalishlar</div>
+          <div class="info-card-value" id="totalRoutes">—</div>
+          <div class="info-card-sub">Faol yo'nalish</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Avtobuslar</div>
+          <div class="info-card-value" id="activeBuses">—</div>
+          <div class="info-card-sub">Yo'lda</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">Keyingi kelish</div>
+          <div class="info-card-value" id="nextArrival" style="font-size:1.1rem;">—</div>
+          <div class="info-card-sub">Eng yaqin avtobus</div>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+  <!-- end .app-layout -->
+
+  <!-- ═══════════════════════════════════════════════════════════
+       JAVASCRIPT — ES Module
+       ═══════════════════════════════════════════════════════════ -->
+  <script type="module" src="js/app.js"></script>
+
+</body>
+</html>
